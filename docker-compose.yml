@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  ros2_eomma:
+    image: livox_ros2_driver:latest  # ROS 2 Humble 공식 이미지 (필요시 Foxy로 변경)
+    container_name: livox_docker
+    
+    # 🌟 [핵심 1] 네트워크 벽 허물기! (AirSim의 41451 포트 및 ROS2 DDS 통신용)
+    network_mode: "host"
+    ipc: "host"
+    pid: "host"
+    
+    # 🌟 [핵심 2] 엄마 안에서 RViz2 화면을 엄마 밖(CachyOS)으로 쏘기 위한 세팅
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - ROS_DOMAIN_ID=0  # 혹시 호스트에 다른 ROS2 노드가 있다면 ID를 맞춰주기
+    
+    # 🌟 [핵심 3] CachyOS의 내 폴더를 엄마 뱃속이랑 공유하기 (코드 수정 용이)
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw  # GUI 화면 공유용
+      - ./:/workspace  # 현재 폴더를 엄마 안의 /workspace로 연결!
+    
+    # 컨테이너가 켜진 상태로 죽지 않게 유지하는 꼼수
+    command: /bin/bash
+    tty: true
+    stdin_open: true
